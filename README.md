@@ -1,40 +1,52 @@
-# Traveling-Salesman-Problem
-This famous problem could be described with the simple question:
+# Traveling Salesman Visualizer
 
-"Given a list of cities and the distances between each pair of cities, what is the shortest possible route that visits each city exactly once
-and returns to the origin city?"
+An interactive JavaFX application for exploring heuristic solutions to the Traveling Salesman Problem (TSP). The tool builds a complete weighted graph from a set of points, computes a Delaunay triangulation, and lets you compare several approximation and improvement steps (random, MST-based, Christofides, 2-opt, triangulation clean-up, and k-opt) while watching the tour evolve.
 
-It is proven that there is no algorithm to solve this problem in polynomial time(NP-Hard), as for every added city in the list the calculation time grows exponentially.
-Different Algorithms were developed to get a solution as near as possible to optimal one. In this project is implemented an improved version of K-OPT Algorithm using Delaunay Triangulation.
-*The basic idea of K-OPT* :
+## Features
+- Load a TSP instance from a tab-separated text file and immediately generate its triangulation and visualization. 【F:TSP/src/main/java/tsp/main/MainController.java†L43-L67】
+- Choose an initial tour via random shuffle, MST-based 2-approximation, or Christofides 1.5-approximation. 【F:TSP/src/main/java/tsp/main/ButtonBox.java†L86-L115】
+- Apply improvement steps: remove crossings with a 2-opt pass, synchronize the tour with Delaunay edges to avoid crossings, and run a k-opt search on a derived graph. 【F:TSP/src/main/java/tsp/main/ButtonBox.java†L96-L115】【F:TSP/src/main/java/tsp/main/MainController.java†L121-L155】
+- Toggle visual layers (tour, MST, triangulation, or higher-order Delaunay edges) and re-center the canvas. 【F:TSP/src/main/java/tsp/main/ButtonBox.java†L55-L163】
+- Save the current instance or tour back to disk for later use. 【F:TSP/src/main/java/tsp/main/ButtonBox.java†L70-L84】【F:TSP/src/main/java/tsp/main/MainController.java†L162-L216】
 
-*1.Given a tour, delete k mutually disjoint edges.
+## Project Structure
+- `TSP/src/main/java/tsp/main/` – JavaFX UI, controllers, and graph/tour orchestration.
+- `TSP/src/main/java/delaunayTriang/` and `TSP/src/main/java/triang/` – Delaunay triangulation utilities and order calculations used to prune edges. 【F:TSP/src/main/java/tsp/main/Instance.java†L8-L134】
+- `TSP/src/main/java/KOpt/` – K-opt solver components.
+- `TSP/examples/` – Sample point sets for quick experiments.
 
-*2.Reassemble the remaining fragments into a tour, leaving no disjoint subtours
+## Prerequisites
+- JDK 11+ with JavaFX 11 modules (managed automatically by Gradle via the OpenJFX plugin). 【F:TSP/build.gradle†L1-L32】
+- Gradle is bundled via the wrapper, so no separate installation is required.
 
-*3.Each fragment endpoint can be connected to 2k − 2 other possibilities: of 2k total fragment endpoints available, the two endpoints of the fragment under consideration are disallowed.
+## Running the Application
+1. Navigate to the project folder and start the app:
+   ```bash
+   cd TSP
+   ./gradlew run
+   ```
+2. When the window opens, choose a point file via the file chooser dialog. 【F:TSP/src/main/java/tsp/main/main.java†L13-L32】
+3. Use the **Algorithm** menu to pick an initial tour, remove crossings, sync with the triangulation, and run k-opt. 【F:TSP/src/main/java/tsp/main/ButtonBox.java†L86-L115】
+4. Use the **View** menu to toggle overlays or center the canvas, and the **File** menu to save the instance or the current tour. 【F:TSP/src/main/java/tsp/main/ButtonBox.java†L55-L163】【F:TSP/src/main/java/tsp/main/ButtonBox.java†L70-L84】
 
-In this algorithm, first the crossing edges are eliminated by detouring in the region. This results always in a shorter tour. Then the resulting tour and the triangulation are synchronized. The last step is the K-Optimization
-that deletes k mutually disjoint edges and reconnects the subtours using Delaunay edges (from the Delaunay triangulation). The solution is then compared to the result from two different algorithms: MST-Tour which is a 2-Approx Algorithm,
-and to Christophides-Tour which is a 1,5-Approx algorithm. In every example, the solution is significantly better.
+## Input Format
+Instance files are plain text with one point per line, using tab or space separators:
+```
+<id> <x> <y>
+<id> <x> <y>
+...
+```
+This format is parsed into `Vertex` objects before building the weighted graph. 【F:TSP/src/main/java/tsp/main/FileReader.java†L9-L47】
 
-###Features
+## How It Works
+- The application constructs a complete weighted graph from the loaded points, tagging edges that belong to the tour or the Delaunay triangulation so they can be shown/hidden efficiently. 【F:TSP/src/main/java/tsp/main/Instance.java†L21-L133】
+- Approximate tours can be initialized with JGraphT’s 2-approximation (MST) or Christofides algorithms, then improved with custom 2-opt and k-opt steps that respect triangulation structure. 【F:TSP/src/main/java/tsp/main/MainController.java†L103-L155】
+- Masked subgraphs allow the UI to render the tour and triangulation independently without duplicating graph data. 【F:TSP/src/main/java/tsp/main/Instance.java†L21-L134】
 
--Open examples
+## Saving Results
+- **Save Instance** writes the current point set (id, x, y) to a text file.
+- **Save Tour** writes the tour as an ordered list of coordinates.
+Both options are available from the File menu and use the built-in file chooser for destination selection. 【F:TSP/src/main/java/tsp/main/ButtonBox.java†L70-L84】【F:TSP/src/main/java/tsp/main/MainController.java†L162-L216】
 
--Zoom in / Zoom out
-
--Scene dragging 
-
--Drag&Drop Points 
-
--Delaunay Triangulation
-
--Delaunay edges of different order (max 4)
-
--Minimal Spanning Tree
-
--Syncing Tour and Triangulation
-
--Save Tour/Instance
-
+## Licensing
+No explicit license information is provided in this repository.
